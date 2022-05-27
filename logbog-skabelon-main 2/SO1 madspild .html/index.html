@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Helvetica;font-size:16.080000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:113.775795px;left:75.519867px"><nobr>SO. Madspild AF Gabriel Nyborg og Emil Mortensen. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:165.902588px;left:75.519867px"><nobr>Indledning. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:183.182541px;left:75.519867px"><nobr>Madspild er et stort problem over hele verdenen bare i Danmark er 13% af alle de grøntsager, Danmark </nobr></span><span style="position:absolute;top:200.142578px;left:75.519867px"><nobr>producere bliver smidt ud, eller går til spilde i butikker/ produktion. men hvad kan vi egentlig gøre ved det? </nobr></span><span style="position:absolute;top:217.102539px;left:75.519867px"><nobr>Vores gruppe har undersøgt hvor meget madspild af grøntsager der er i Danmark og hvad butikskæden Coop gør </nobr></span><span style="position:absolute;top:234.382568px;left:75.519867px"><nobr>i forvejen for at mindske dette store spild af friske grøntsager, har Amerikanske supermarkeder fat i noget som </nobr></span><span style="position:absolute;top:251.342529px;left:75.519867px"><nobr>danskerne ikke har, når nu de har en plan om at have 0% madspild inden 2025. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:268.622559px;left:75.519867px"><nobr>Vi vil også undersøge hvordan den danske økonomi vil blive påvirket hvis man lavede nogen lovkrav der muligvis </nobr></span><span style="position:absolute;top:285.582611px;left:75.519867px"><nobr>kunne begrænse madspild af grøntsager i Danmark. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:302.542572px;left:75.519867px"><nobr>Udover har vi også dykket ned i hvordan produktionen af kinesiske Hvidløg fungerer, og om det egentlig er en </nobr></span><span style="position:absolute;top:319.822601px;left:75.519867px"><nobr>nødvendighed at importere kinesiske hvidløg, og hvad vil der egentlig ske hvis man stoppede importen af </nobr></span><span style="position:absolute;top:336.782562px;left:75.519867px"><nobr>hvidløgene fra Kina. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:354.062592px;left:75.519867px"><nobr>I denne rapport vil vi komme ind på disse emner, hvor vi kommer med forslag til hvordan man kan mindske </nobr></span><span style="position:absolute;top:371.022552px;left:75.519867px"><nobr>madspild og argumentere for hvorfor det ikke er en nødvendighed at Danmark importerer hvidløg fra Kina. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:422.222565px;left:75.519867px"><nobr>Problemformulering: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:439.502533px;left:75.519867px"><nobr>Hvad skal der til for at mindske madspild af grøntsager? hvad gør andre Amerikanske supermarkeder Og er det </nobr></span><span style="position:absolute;top:456.462524px;left:75.519867px"><nobr>virkelig en nødvendighed at importere hvidløg fra Kina? </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:507.662537px;left:75.519867px"><nobr>Problemstilling:: </nobr></span></span></p><p><span style="font-family:Arial Unicode MS;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:541.902588px;left:75.519867px"><nobr>· Hvordan er en udvalgt fødevares livscyklus (”fra vugge til grav”), og hvad kan der gøres for at mindske </nobr></span><span style="position:absolute;top:558.862549px;left:75.519867px"><nobr>madspildet ved denne fødevare? </nobr></span></span></p><p><span style="font-family:Arial Unicode MS;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:576.142517px;left:75.519867px"><nobr>· Hvordan kan vores politikere sætte mere skub i kampen mod madspild? </nobr></span></span></p><p><span style="font-family:Arial Unicode MS;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:593.102539px;left:75.519867px"><nobr>· Hvad gør US eller UK (virksomheder, regering eller forbrugere) for at minimere madspild? </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:627.342529px;left:75.519867px"><nobr>Hvordan foregår processen af hvidløg? </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:644.302490px;left:75.519867px"><nobr>Kina: hvidløgene bliver plantet om efteråret af </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:661.582581px;left:75.519867px"><nobr>kinesiske familier. De prøver at sælge hvidløgs </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:678.542542px;left:75.519867px"><nobr>skyd til folk i byen, men prisen stiger og falder </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:695.822571px;left:75.519867px"><nobr>hele tiden så landmændene har svært ved at </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:712.782532px;left:75.519867px"><nobr>sælge uden at miste penge. Landmanden sælger </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:730.062500px;left:75.519867px"><nobr>ikke når prisen er så lav og derfor er der allerede </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:747.022583px;left:75.519867px"><nobr>et madspild ved produktionen. Sommeren er </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:763.982605px;left:75.519867px"><nobr>kommet og nu er det blevet tid til at indsamle </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:781.262512px;left:75.519867px"><nobr>hvidløgene. De indsamler dem med </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:798.222534px;left:75.519867px"><nobr>menneskekraft og ikke nogen hjælp fra maskiner. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:815.502625px;left:75.519867px"><nobr>De sælger deres hvidløg men de er nødt til at </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:832.462585px;left:75.519867px"><nobr>vente med at sælge indtil at efterspørgsel er </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:849.422607px;left:75.519867px"><nobr>blevet større og prisen dermed er steget ellers vil de miste for mange penge. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:866.702576px;left:75.519867px"><nobr>De er nødt til at sælge alt deres hvidløg før august ellers vil de begynde at spire og derfor ikke kan sælges. Hvis </nobr></span><span style="position:absolute;top:883.662598px;left:75.519867px"><nobr>de kinesiske landmænd ikke har formået at sælge deres hvidløg til andre landmænd eller til private forbruger, er </nobr></span><span style="position:absolute;top:900.942566px;left:75.519867px"><nobr>de tvunget til at sælge dem til større firmaer til en ekstremt dårlig pris pr.kg. de firmaer som de sælger til, er </nobr></span><span style="position:absolute;top:917.902588px;left:75.519867px"><nobr>dem som eksporterer hvidløg til hele verdenen. Efterfølgende bliver de sendt ud til forskellige lande, og bliver </nobr></span><span style="position:absolute;top:934.862549px;left:75.519867px"><nobr>fordelt i de mængder som de forskellige supermarkeder har bestil hjem til at sælge. </nobr></span></span></p>','<p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:113.742516px;left:75.519867px"><nobr>Kilde: dokumentar. Produceret af CNTV. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:131.022537px;left:75.519867px"><nobr>From Farmland to Your Hand [The Garlic Harvest in China] | China Documentary. </nobr></span><span style="position:absolute;top:147.982590px;left:75.519867px"><nobr>https://youtu.be/xINjG___bMQ </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:182.222580px;left:75.519867px"><nobr>Danmark: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:199.182541px;left:75.519867px"><nobr>I Danmark bliver hvidløgene plantet i efteråret af danske landmænd, de sælger lokalt til supermarkeder og til </nobr></span><span style="position:absolute;top:216.462570px;left:75.519867px"><nobr>privatpersoner. I modsætning til Kina er prisen i Danmark rimelig stabil og ændre sig i takt med internationale </nobr></span><span style="position:absolute;top:233.422531px;left:75.519867px"><nobr>priser. Man skal ikke frygte prisen af sine hvidløg i Danmark men til tider kan frost og kulde være et stort </nobr></span><span style="position:absolute;top:250.702560px;left:75.519867px"><nobr>problem for de danske landmænd. I Danmark er processen relativt automatiseret hvor det mest kun er dele af </nobr></span><span style="position:absolute;top:267.662598px;left:75.519867px"><nobr>plukningen der er manuelt. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:301.902588px;left:75.519867px"><nobr>Et problem kunne tænkes at danske hvidløgs producenter kunne have problemer med at komme af, med deres </nobr></span><span style="position:absolute;top:318.862549px;left:75.519867px"><nobr>produktion hvis supermarkederne i en periode har valgt at prioriterer importeret hvidløg i stedet for dansk </nobr></span><span style="position:absolute;top:336.142578px;left:75.519867px"><nobr>produceret. Men efter vores gruppe har haft en dialog over telefon med Lotte lei (ejer af gård der producere </nobr></span><span style="position:absolute;top:353.102539px;left:75.519867px"><nobr>Danske hvidløg) fortæller hun, at der ikke forekommer problemer med at komme af med deres produkt, og der </nobr></span><span style="position:absolute;top:370.062592px;left:75.519867px"><nobr>altid er en efterspørgsel af Danske hvidløg. Udover, udtaler hun også hun at der ikke er et madspild af hvidløg </nobr></span><span style="position:absolute;top:387.342621px;left:75.519867px"><nobr>ved produktionens side. Hvilket er en stor modsætning til de kinesiske producenter hvor det er en af deres </nobr></span><span style="position:absolute;top:404.302582px;left:75.519867px"><nobr>største problemer. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:438.542572px;left:75.519867px"><nobr>Konklusion: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:10.560000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:455.502502px;left:75.519867px"><nobr>Efter vores research for hvordan hvidløgsproduktionen fungerer i Kina og i Danmark og dialog med en af de </nobr></span><span style="position:absolute;top:472.782501px;left:75.519867px"><nobr>største producenter af hvidløg i Danmark. Er vi kommet til den konklusion at det er svært at ændre på madspild i </nobr></span><span style="position:absolute;top:489.742554px;left:75.519867px"><nobr>Danmark vedrørende hvidløg på grund af det spild der er forekommer er i Kina i produktionen. Den danske </nobr></span><span style="position:absolute;top:507.022583px;left:75.519867px"><nobr>produktion har ikke et spild af deres produkt under produktionen. Selvfølgelig ville der altid være et spild i </nobr></span><span style="position:absolute;top:523.982544px;left:75.519867px"><nobr>butikkerne, men den største procent af spild af produktet er helt klart under produktionen. Derfor ville det </nobr></span><span style="position:absolute;top:541.262512px;left:75.519867px"><nobr>eneste Danmarks regering kunne gøre er at vælge ikke at være en del af det. Del vil sige at stoppe importen af </nobr></span><span style="position:absolute;top:558.222534px;left:75.519867px"><nobr>hvidløg fra Kina. Den indflydelse det kunne have er ikke stor da vi har producenter i Europa. En anden indflydelse </nobr></span><span style="position:absolute;top:575.182495px;left:75.519867px"><nobr>det kunne have er at der skete en kædereaktion. Det vil sige at andre lande fik blikket op for hvor dårligt </nobr></span><span style="position:absolute;top:592.462524px;left:75.519867px"><nobr>produktet er og kunne finde på at stoppe handlen imellem Kina angående Hvidløg, dette kunne måske få Kina til </nobr></span><span style="position:absolute;top:609.422607px;left:75.519867px"><nobr>at hæve Kvalitet af produktet. </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00002.jpg"/></nobr></div><p><span style="font-family:Helvetica;font-size:16.080000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:192.175781px;left:75.519867px"><nobr>Information </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:237.994705px;left:75.519867px"><nobr>Danmarks samlede hvidløgs produktions areal er på omkring 50 hektar (500000.0m ) Det vil svare </nobr></span><span style="position:absolute;top:257.514648px;left:75.519867px"><nobr>til 70 fodboldbaner og Danmarks største producent udgør 6%(3 Hektar) af den samlede antal </nobr></span><span style="position:absolute;top:277.034668px;left:75.519867px"><nobr>hektarer brugt til produktion af hvidløg i Danmark. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:335.594635px;left:75.519867px"><nobr>Udenlandsk produceret hvidløg koster i gennemsnittet også ca. det halve af hvad dansk </nobr></span><span style="position:absolute;top:355.114655px;left:75.519867px"><nobr>produceret økologiske hvidløg koster: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:374.634674px;left:75.519867px"><nobr>som også kan ses på billederne hvor de importerede hvidløg koster 6kr; og at de økologiske </nobr></span><span style="position:absolute;top:394.154694px;left:75.519867px"><nobr>hvidløg der produceret i Danmark koster 20kr; </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:561.194702px;left:75.519867px"><nobr>Coops egne produkt, hvidløg spansk/Kina Änglamark produkt, hvidløg Dansk </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:619.754639px;left:75.519867px"><nobr>Kina er den største producent af hvidløg: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:639.274658px;left:75.519867px"><nobr>I 2015 blev verdensproduktionen af hvidløg anslået til 25 millioner med Kina, der udgjorde 80% af </nobr></span><span style="position:absolute;top:658.794678px;left:75.519867px"><nobr>den samlede produktion. Indien kom i anden stund, mens andre lande tegnede sig for mindre end </nobr></span><span style="position:absolute;top:678.314697px;left:75.519867px"><nobr>0.5 millioner tons om året. I USA er produktionen af hvidløg hovedsagelig fokuseret i Gilroy, </nobr></span><span style="position:absolute;top:697.834717px;left:75.519867px"><nobr>Californien kaldet \'hvidløgenes hovedstad. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:736.874695px;left:75.519867px"><nobr>De øvrige tre producerende lande af hvidløg omfatter; Sydkorea, Egypten og Rusland producerer </nobr></span><span style="position:absolute;top:756.394714px;left:75.519867px"><nobr>henholdsvis 0.35, 0.26 og 0.26 millioner tons, </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:795.434753px;left:75.519867px"><nobr>Kina bleger deres hvidløg med klorin pesticider, for at gøre det mere hvidt men også så det ikke </nobr></span><span style="position:absolute;top:814.954773px;left:75.519867px"><nobr>spire i transporten. </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:834.474731px;left:75.519867px"><nobr>Kinas landbrugere bruger kemikalier der er ulovlige i USA og EU, </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:853.994690px;left:75.519867px"><nobr>Der blevet fundet plantager hvor der er blevet brugt kloakvand som gødning, </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:873.514771px;left:75.519867px"><nobr>Undersøgelser har også vist at der er højt indhold af metal og bly i deres hvidløg, </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:893.034729px;left:75.519867px"><nobr>Hektar: </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:912.874756px;left:75.519867px"><nobr>I 2016 var hvidløg produktionen i alt i hele Kina på 333.333 hektars </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:12.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:932.394775px;left:75.519867px"><nobr>Det vil svare til 466852,9 fodboldbaner, </nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
